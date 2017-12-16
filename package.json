@@ -10,5 +10,8 @@
     "node": "v8.5.0"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "worker-farm": "^1.5.2"
+  }
 }
