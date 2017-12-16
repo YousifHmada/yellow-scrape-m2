@@ -8,13 +8,13 @@ var workerFarm = require('worker-farm')
   , maxCallTime                 : Infinity
   , maxRetries                  : Infinity
   , autoStart                   : false
-}, require.resolve('./child'))
-  , ret        = 0
+}, require.resolve('./child'));
 
 //create a scrape function: 
 var scrape = function(parallel) {
 	return new Promise((resolve, reject)=>{
 		var date = new Date();
+		ret = 0;
 		console.time('operation');
 		let sum = 0;
 		if(parallel){
@@ -22,11 +22,11 @@ var scrape = function(parallel) {
 			  //generating 50 tasks
 			  workers('#' + i + ' FOO', function (err, out, outp) {
 			    //this is called after the task is finished
-			    //console.log(outp);
+			    // console.log(outp);
 			    sum += out;
 			    if(++ret == 50){
 			    	//this is called after all tasks are finished
-			    	console.log('processes finished');
+			    	// console.log('processes finished');
 			    	console.timeEnd('operation'); // operation: 1753.916ms
 			    	resolve({sum,time: (new Date() - date) + 'ms'});
 			    }
@@ -39,8 +39,8 @@ var scrape = function(parallel) {
 			  for (var i = 0; i < 10000000; i++) {
 			  	out += i;
 			  }
-				 sum += out;
-			  //console.log(j ,out);
+			  sum += out;
+			  // console.log(j ,out);
 			}
 			console.timeEnd('operation'); // operation: 2514.907ms
 			resolve({sum,time: (new Date() - date) + 'ms'});
