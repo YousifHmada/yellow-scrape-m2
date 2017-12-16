@@ -1,10 +1,10 @@
 const cheerio = require('cheerio');
 var axios = require('axios');
-module.exports = function (inp, callback) {
+module.exports = function (categoryName, inp, callback) {
   var date = new Date();
   var $  = '';
   // console.log('req: ' + inp + ' , ' + process.pid);
-  axios.get('https://www.yellowpages.com.eg/en/category/fast-food/p' + inp)
+  axios.get('https://www.yellowpages.com.eg/en/category/' + categoryName + '/p' + inp)
   	.then((response)=>{
   		// console.log(response.data);
   		$ = cheerio.load(response.data, {

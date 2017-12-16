@@ -1,5 +1,7 @@
-var http = require('http');
+var express = require('express');
 var fetchAndExecute = require('./child');
+var app = express();
+var bodyParser = require('body-parser');
 var workerFarm = require('worker-farm')
   , workers    = workerFarm({
     maxCallsPerWorker           : Infinity
@@ -11,63 +13,78 @@ var workerFarm = require('worker-farm')
   , autoStart                   : false
 }, require.resolve('./child'));
 
+//support parsing of application/json type post data
+app.use(bodyParser.json());
+
+//support parsing of application/x-www-form-urlencoded post data
+app.use(bodyParser.urlencoded({ extended: true }));
+
 //create a scrape function: 
-var scrape = function(parallel, numPages) {
+var scrape = function(parallel, categoryName, numPages, allow_deep_digging) {
 	return new Promise((resolve, reject)=>{
 		var date = new Date();
 		var ret = 0;
-		let sum = [];
+		let results = [];
 		if(parallel){
 			for (var i = 1; i <= numPages; i++) {
 			  //generating tasks
-			  workers(i, function (err, out) {
+			  workers(categoryName, i, function (err, out) {
 			    //this is called after the task is finished
 			    // console.log(out);
-			    sum.push(out);
+			    results.push(out);
 			    if(++ret == numPages){
 			    	//this is called after all tasks are finished
 			    	// console.log('processes finished');
 			    	console.log('parallel operation ', (new Date() - date) + 'ms'); // operation: 17numPages3.916ms
-			    	resolve({sum,time: (new Date() - date) + 'ms'});
+			    	resolve({results,time: (new Date() - date) + 'ms'});
 			    }
-			  })
+			  }, allow_deep_digging)
 			}//parallel
 		}else{
 			//simulate sequential mode
 			for (var i = 1; i <= numPages; i++) {
 			  //generating tasks
-			  fetchAndExecute(i, function (err, out) {
+			  fetchAndExecute(categoryName, i, function (err, out) {
 			  	//this is called after the task is finished
 			    // console.log(out);
-			    sum.push(out);
+			    results.push(out);
 			    if(++ret == numPages){
 			    	//this is called after all tasks are finished
 			    	// console.log('processes finished');
 			    	console.log('sequential operation ', (new Date() - date) + 'ms'); // operation: 1753.916ms
-			    	resolve({sum,time: (new Date() - date) + 'ms'});
+			    	resolve({results,time: (new Date() - date) + 'ms'});
 			    }
-			  });
+			  }, allow_deep_digging);
 			}//sequential
 		}
 	});
 }
 
+app.post('/', (req, res)=>{
+	let data = req.body;
+	scrape(true, data.category, data.numberPages, data.allow_deep_digging)
+	.then((result)=>{
+		res.setHeader('Content-Type', 'application/json');
+		res.send(JSON.stringify(result, null, 2)); //write a response to the client
+	});
+});
 
-//create a server object: 
-http.createServer(function (req, res) {
-	if(req.url == '/p'){
-		scrape(true, 50)
-			.then((result)=>{
-				res.setHeader('Content-Type', 'application/json');
-				res.write(JSON.stringify(result, null, 2)); //write a response to the client
-  				res.end(); //end the response
-			});
-	}else if(req.url == '/s'){
-		scrape(false, 50)
-			.then((result)=>{
-				res.setHeader('Content-Type', 'application/json');
-				res.write(JSON.stringify(result, null, 2)); //write a response to the client
-  				res.end(); //end the response
-			});
-	}
-}).listen(process.env.PORT || 8080); //the server object listens on port 8080
+app.get('/p', (req, res)=>{
+	scrape(true, 'fast food', 50, true)
+	.then((result)=>{
+		res.setHeader('Content-Type', 'application/json');
+		res.send(JSON.stringify(result, null, 2)); //write a response to the client
+	});
+})
+app.get('/s', (req, res)=>{
+	scrape(false, 'fast food', 50, true)
+	.then((result)=>{
+		res.setHeader('Content-Type', 'application/json');
+		res.send(JSON.stringify(result, null, 2)); //write a response to the client
+	});
+})
+
+
+app.listen((process.env.PORT || 8080), ()=>{
+	console.log("server is running on port " +(process.env.PORT || 8080));
+}); //the server object listens on port 8080
