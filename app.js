@@ -22,7 +22,7 @@ var scrape = function(parallel) {
 			  //generating 50 tasks
 			  workers('#' + i + ' FOO', function (err, out, outp) {
 			    //this is called after the task is finished
-			    console.log(outp);
+			    //console.log(outp);
 			    sum += out;
 			    if(++ret == 50){
 			    	//this is called after all tasks are finished
@@ -40,7 +40,7 @@ var scrape = function(parallel) {
 			  	out += i;
 			  }
 				 sum += out;
-			  console.log(j ,out);
+			  //console.log(j ,out);
 			}
 			console.timeEnd('operation'); // operation: 2514.907ms
 			resolve({sum,time: (new Date() - date) + 'ms'});
