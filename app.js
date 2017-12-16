@@ -28,7 +28,7 @@ var scrape = function(parallel, categoryName, numPages, allow_deep_digging) {
 		if(parallel){
 			for (var i = 1; i <= numPages; i++) {
 			  //generating tasks
-			  workers(categoryName, i, function (err, out) {
+			  workers(categoryName, i, allow_deep_digging, function (err, out) {
 			    //this is called after the task is finished
 			    // console.log(out);
 			    results.push(out);
@@ -38,13 +38,13 @@ var scrape = function(parallel, categoryName, numPages, allow_deep_digging) {
 			    	console.log('parallel operation ', (new Date() - date) + 'ms'); // operation: 17numPages3.916ms
 			    	resolve({results,time: (new Date() - date) + 'ms'});
 			    }
-			  }, allow_deep_digging)
+			  })
 			}//parallel
 		}else{
 			//simulate sequential mode
 			for (var i = 1; i <= numPages; i++) {
 			  //generating tasks
-			  fetchAndExecute(categoryName, i, function (err, out) {
+			  fetchAndExecute(categoryName, i, allow_deep_digging, function (err, out) {
 			  	//this is called after the task is finished
 			    // console.log(out);
 			    results.push(out);
@@ -54,7 +54,7 @@ var scrape = function(parallel, categoryName, numPages, allow_deep_digging) {
 			    	console.log('sequential operation ', (new Date() - date) + 'ms'); // operation: 1753.916ms
 			    	resolve({results,time: (new Date() - date) + 'ms'});
 			    }
-			  }, allow_deep_digging);
+			  });
 			}//sequential
 		}
 	});
@@ -70,14 +70,14 @@ app.post('/', (req, res)=>{
 });
 
 app.get('/p', (req, res)=>{
-	scrape(true, 'fast food', 50, true)
+	scrape(true, 'fast food', 10, true)
 	.then((result)=>{
 		res.setHeader('Content-Type', 'application/json');
 		res.send(JSON.stringify(result, null, 2)); //write a response to the client
 	});
 })
 app.get('/s', (req, res)=>{
-	scrape(false, 'fast food', 50, true)
+	scrape(false, 'fast food', 10, true)
 	.then((result)=>{
 		res.setHeader('Content-Type', 'application/json');
 		res.send(JSON.stringify(result, null, 2)); //write a response to the client

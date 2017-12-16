@@ -1,6 +1,6 @@
 const cheerio = require('cheerio');
 var axios = require('axios');
-module.exports = function (categoryName, inp, callback) {
+module.exports = function (categoryName, inp, allow_deep_digging, callback) {
   var date = new Date();
   var $  = '';
   // console.log('req: ' + inp + ' , ' + process.pid);
