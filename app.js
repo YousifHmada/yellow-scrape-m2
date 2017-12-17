@@ -31,7 +31,35 @@ var scrape = function(parallel, categoryName, numPages, allow_deep_digging) {
 			  workers(categoryName, i, allow_deep_digging, function (err, out) {
 			    //this is called after the task is finished
 			    // console.log(out);
-			    results.push(out);
+			    for (var i = 0; i < out.length; i++) {
+			    	let tempObj = {};
+			    	if(allow_deep_digging){
+			    		tempObj = {
+				    		companyName: out[i].companyName,
+				    		address: out[i].address,
+				    		about: out[i].about,
+				    		image: out[i].image,
+				    		keywords: out[i].keywords,
+				    		categories: out[i].categories,
+				    		facebook: (out[i].facebook) ? out[i].facebook : '',
+				    		ratingTotal: (out[i].ratingTotal) ? out[i].ratingTotal : 0,
+				    		photos: (out[i].photos) ? out[i].photos : [],
+				    		menus: (out[i].menus) ? out[i].menus : [],
+				    		branches: (out[i].branches) ? out[i].branches : [],
+				    		reviews: (out[i].reviews) ? out[i].reviews : []
+				    	};
+			    	}else{
+			    		tempObj = {
+				    		companyName: out[i].companyName,
+				    		address: out[i].address,
+				    		about: out[i].about,
+				    		image: out[i].image,
+				    		keywords: out[i].keywords,
+				    		categories: out[i].categories
+				    	};
+			    	}
+			    	results.push(tempObj);
+			    }
 			    if(++ret == numPages){
 			    	//this is called after all tasks are finished
 			    	// console.log('processes finished');
@@ -47,7 +75,35 @@ var scrape = function(parallel, categoryName, numPages, allow_deep_digging) {
 			  fetchAndExecute(categoryName, i, allow_deep_digging, function (err, out) {
 			  	//this is called after the task is finished
 			    // console.log(out);
-			    results.push(out);
+			    for (var i = 0; i < out.length; i++) {
+			    	let tempObj = {};
+			    	if(allow_deep_digging){
+			    		tempObj = {
+				    		companyName: out[i].companyName,
+				    		address: out[i].address,
+				    		about: out[i].about,
+				    		image: out[i].image,
+				    		keywords: out[i].keywords,
+				    		categories: out[i].categories,
+				    		facebook: (out[i].facebook) ? out[i].facebook : '',
+				    		ratingTotal: (out[i].ratingTotal) ? out[i].ratingTotal : 0,
+				    		photos: (out[i].photos) ? out[i].photos : [],
+				    		menus: (out[i].menus) ? out[i].menus : [],
+				    		branches: (out[i].branches) ? out[i].branches : [],
+				    		reviews: (out[i].reviews) ? out[i].reviews : []
+				    	};
+			    	}else{
+			    		tempObj = {
+				    		companyName: out[i].companyName,
+				    		address: out[i].address,
+				    		about: out[i].about,
+				    		image: out[i].image,
+				    		keywords: out[i].keywords,
+				    		categories: out[i].categories
+				    	};
+			    	}
+			    	results.push(tempObj);
+			    }
 			    if(++ret == numPages){
 			    	//this is called after all tasks are finished
 			    	// console.log('processes finished');
@@ -70,14 +126,14 @@ app.post('/', (req, res)=>{
 });
 
 app.get('/p', (req, res)=>{
-	scrape(true, 'fast food', 10, true)
+	scrape(true, 'fast food', 1, true)
 	.then((result)=>{
 		res.setHeader('Content-Type', 'application/json');
 		res.send(JSON.stringify(result, null, 2)); //write a response to the client
 	});
 })
 app.get('/s', (req, res)=>{
-	scrape(false, 'fast food', 10, true)
+	scrape(false, 'fast food', 1, false)
 	.then((result)=>{
 		res.setHeader('Content-Type', 'application/json');
 		res.send(JSON.stringify(result, null, 2)); //write a response to the client
