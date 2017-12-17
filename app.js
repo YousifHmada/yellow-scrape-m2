@@ -49,7 +49,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 //create a scrape function: 
-let scrape = function(parallel, categoryName, numPages, allow_deep_digging) {
+let scrape = function(parallel, categoryName, numPages, allow_deep_digging, store_data) {
 	return new Promise((resolve, reject)=>{
 		let date = new Date();
 		let ret = 0;
@@ -79,54 +79,56 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging) {
 				    		branches: (out[i].branches) ? out[i].branches : [],
 				    		reviews: (out[i].reviews) ? out[i].reviews : []
 				    	}
-				    	tempInsertValues += "'" + escapeForSql( tempObj.companyName ) + "'";
-				    	if(tempObj.address == '' || tempObj.address == null)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ",'" + escapeForSql( tempObj.address ) + "'";
+				    	if(store_data){
+				    		tempInsertValues += "'" + escapeForSql( tempObj.companyName ) + "'";
+					    	if(tempObj.address == '' || tempObj.address == null)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ",'" + escapeForSql( tempObj.address ) + "'";
+					    	}
+					    	if(tempObj.about == '' || tempObj.about == null)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ",'" + escapeForSql( tempObj.about ) + "'";
+					    	}
+					    	if(tempObj.image == '' || tempObj.image == null)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ",'" + escapeForSql( tempObj.image ) + "'";
+					    	}
+					    	if(tempObj.keywords.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.keywords.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
+					    	if(tempObj.categories.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.categories.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
+					    	if(tempObj.facebook == '' || tempObj.facebook == null)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ",'" + escapeForSql( tempObj.facebook ) + "'";
+					    	}
+					    	if(tempObj.ratingTotal == '' || tempObj.ratingTotal == null)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + tempObj.ratingTotal;
+					    	}
+					    	if(tempObj.photos.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.photos.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
+					    	if(tempObj.menus.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.menus.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
+					    	if(tempObj.branches.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.branches.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
+					    	if(tempObj.reviews.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.reviews.map(($item)=>{
+							    		return $item.replace(/,/g,()=>'__')
+							    	}).map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
+					    	queries.push(tempInsertValues);
 				    	}
-				    	if(tempObj.about == '' || tempObj.about == null)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ",'" + escapeForSql( tempObj.about ) + "'";
-				    	}
-				    	if(tempObj.image == '' || tempObj.image == null)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ",'" + escapeForSql( tempObj.image ) + "'";
-				    	}
-				    	if(tempObj.keywords.length <= 0)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ',' + "'{" + tempObj.keywords.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
-				    	}
-				    	if(tempObj.categories.length <= 0)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ',' + "'{" + tempObj.categories.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
-				    	}
-				    	if(tempObj.facebook == '' || tempObj.facebook == null)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ",'" + escapeForSql( tempObj.facebook ) + "'";
-				    	}
-				    	if(tempObj.ratingTotal == '' || tempObj.ratingTotal == null)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ',' + tempObj.ratingTotal;
-				    	}
-				    	if(tempObj.photos.length <= 0)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ',' + "'{" + tempObj.photos.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
-				    	}
-				    	if(tempObj.menus.length <= 0)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ',' + "'{" + tempObj.menus.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
-				    	}
-				    	if(tempObj.branches.length <= 0)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ',' + "'{" + tempObj.branches.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
-				    	}
-				    	if(tempObj.reviews.length <= 0)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ',' + "'{" + tempObj.reviews.map(($item)=>{
-						    		return $item.replace(/,/g,()=>'__')
-						    	}).map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
-				    	}
-				    	queries.push(tempInsertValues);
 			    	}else{
 			    		tempObj = {
 				    		companyName: out[i].companyName,
@@ -136,34 +138,36 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging) {
 				    		keywords: out[i].keywords,
 				    		categories: out[i].categories
 				    	};
-				    	tempInsertValues += "'" + escapeForSql( tempObj.companyName ) + "'";
-				    	if(tempObj.address == '' || tempObj.address == null)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ",'" + escapeForSql( tempObj.address ) + "'";
-				    	}
-				    	if(tempObj.about == '' || tempObj.about == null)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ",'" + escapeForSql( tempObj.about ) + "'";
-				    	}
-				    	if(tempObj.image == '' || tempObj.image == null)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ",'" + escapeForSql( tempObj.image ) + "'";
-				    	}
-				    	if(tempObj.keywords.length <= 0)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ',' + "'{" + tempObj.keywords.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
-				    	}
-				    	if(tempObj.categories.length <= 0)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ',' + "'{" + tempObj.categories.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
-				    	}
-				    	tempInsertValues += ',null';
-				    	tempInsertValues += ',null';
-				    	tempInsertValues += ',null';
-				    	tempInsertValues += ',null';
-				    	tempInsertValues += ',null';
-				    	tempInsertValues += ',null';
-				    	queries.push(tempInsertValues);
+				    	if(store_data){
+					    	tempInsertValues += "'" + escapeForSql( tempObj.companyName ) + "'";
+					    	if(tempObj.address == '' || tempObj.address == null)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ",'" + escapeForSql( tempObj.address ) + "'";
+					    	}
+					    	if(tempObj.about == '' || tempObj.about == null)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ",'" + escapeForSql( tempObj.about ) + "'";
+					    	}
+					    	if(tempObj.image == '' || tempObj.image == null)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ",'" + escapeForSql( tempObj.image ) + "'";
+					    	}
+					    	if(tempObj.keywords.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.keywords.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
+					    	if(tempObj.categories.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.categories.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
+					    	tempInsertValues += ',null';
+					    	tempInsertValues += ',null';
+					    	tempInsertValues += ',null';
+					    	tempInsertValues += ',null';
+					    	tempInsertValues += ',null';
+					    	tempInsertValues += ',null';
+					    	queries.push(tempInsertValues);
+					    }
 			    	}
 			    	results.push(tempObj);
 			    }
@@ -172,16 +176,18 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging) {
 			    	// console.log('processes finished');
 			    	// console.log('queries ', queries);
 			    	console.log('parallel operation ', (new Date() - date) + 'ms'); // operation: 17numPages3.916ms
-			    	// Promise.all((()=>{
-			    	// 	let tempArray = [];
-			    	// 	let numIterations = Math.ceil(queries.length / 20);
-			    	// 	for(let i = 0; i < numIterations; i++)
-			    	// 	{
-			    	// 		tempArray.push(insertIntoDB(queries.slice((20*i), 20*(i+1))));
-			    	// 	}
-			    	// 	return tempArray;
-			    	// })()).catch((error)=>console.log('insertion error ',error));
-			    	insertIntoDB(queries).catch((error)=>console.log('insertion error ',error));
+			    	if(store_data){
+			    		// Promise.all((()=>{
+				    	// 	let tempArray = [];
+				    	// 	let numIterations = Math.ceil(queries.length / 20);
+				    	// 	for(let i = 0; i < numIterations; i++)
+				    	// 	{
+				    	// 		tempArray.push(insertIntoDB(queries.slice((20*i), 20*(i+1))));
+				    	// 	}
+				    	// 	return tempArray;
+				    	// })()).catch((error)=>console.log('insertion error ',error));
+				    	insertIntoDB(queries).catch((error)=>console.log('insertion error ',error));
+			    	}
 			    	resolve({results,time: (new Date() - date) + 'ms'});
 			    }
 			  })
@@ -210,55 +216,57 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging) {
 				    		menus: (out[i].menus) ? out[i].menus : [],
 				    		branches: (out[i].branches) ? out[i].branches : [],
 				    		reviews: (out[i].reviews) ? out[i].reviews : []
-				    	};
-				    	tempInsertValues += "'" + escapeForSql( tempObj.companyName ) + "'";
-				    	if(tempObj.address == '' || tempObj.address == null)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ",'" + escapeForSql( tempObj.address ) + "'";
 				    	}
-				    	if(tempObj.about == '' || tempObj.about == null)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ",'" + escapeForSql( tempObj.about ) + "'";
+				    	if(store_data){
+				    		tempInsertValues += "'" + escapeForSql( tempObj.companyName ) + "'";
+					    	if(tempObj.address == '' || tempObj.address == null)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ",'" + escapeForSql( tempObj.address ) + "'";
+					    	}
+					    	if(tempObj.about == '' || tempObj.about == null)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ",'" + escapeForSql( tempObj.about ) + "'";
+					    	}
+					    	if(tempObj.image == '' || tempObj.image == null)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ",'" + escapeForSql( tempObj.image ) + "'";
+					    	}
+					    	if(tempObj.keywords.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.keywords.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
+					    	if(tempObj.categories.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.categories.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
+					    	if(tempObj.facebook == '' || tempObj.facebook == null)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ",'" + escapeForSql( tempObj.facebook ) + "'";
+					    	}
+					    	if(tempObj.ratingTotal == '' || tempObj.ratingTotal == null)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + tempObj.ratingTotal;
+					    	}
+					    	if(tempObj.photos.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.photos.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
+					    	if(tempObj.menus.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.menus.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
+					    	if(tempObj.branches.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.branches.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
+					    	if(tempObj.reviews.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.reviews.map(($item)=>{
+							    		return $item.replace(/,/g,()=>'__')
+							    	}).map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
+					    	queries.push(tempInsertValues);
 				    	}
-				    	if(tempObj.image == '' || tempObj.image == null)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ",'" + escapeForSql( tempObj.image ) + "'";
-				    	}
-				    	if(tempObj.keywords.length <= 0)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ',' + "'{" + tempObj.keywords.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
-				    	}
-				    	if(tempObj.categories.length <= 0)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ',' + "'{" + tempObj.categories.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
-				    	}
-				    	if(tempObj.facebook == '' || tempObj.facebook == null)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ",'" + escapeForSql( tempObj.facebook ) + "'";
-				    	}
-				    	if(tempObj.ratingTotal == '' || tempObj.ratingTotal == null)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ',' + tempObj.ratingTotal;
-				    	}
-				    	if(tempObj.photos.length <= 0)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ',' + "'{" + tempObj.photos.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
-				    	}
-				    	if(tempObj.menus.length <= 0)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ',' + "'{" + tempObj.menus.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
-				    	}
-				    	if(tempObj.branches.length <= 0)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ',' + "'{" + tempObj.branches.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
-				    	}
-				    	if(tempObj.reviews.length <= 0)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ',' + "'{" + tempObj.reviews.map(($item)=>{
-						    		return $item.replace(/,/g,()=>'__')
-						    	}).map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
-				    	}
-				    	queries.push(tempInsertValues);
 			    	}else{
 			    		tempObj = {
 				    		companyName: out[i].companyName,
@@ -268,34 +276,36 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging) {
 				    		keywords: out[i].keywords,
 				    		categories: out[i].categories
 				    	};
-				    	tempInsertValues += "'" + escapeForSql( tempObj.companyName ) + "'";
-				    	if(tempObj.address == '' || tempObj.address == null)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ",'" + escapeForSql( tempObj.address ) + "'";
-				    	}
-				    	if(tempObj.about == '' || tempObj.about == null)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ",'" + escapeForSql( tempObj.about ) + "'";
-				    	}
-				    	if(tempObj.image == '' || tempObj.image == null)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ",'" + escapeForSql( tempObj.image ) + "'";
-				    	}
-				    	if(tempObj.keywords.length <= 0)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ',' + "'{" + tempObj.keywords.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
-				    	}
-				    	if(tempObj.categories.length <= 0)tempInsertValues += ',null';
-				    	else{
-				    		tempInsertValues += ',' + "'{" + tempObj.categories.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
-				    	}
-				    	tempInsertValues += ',null';
-				    	tempInsertValues += ',null';
-				    	tempInsertValues += ',null';
-				    	tempInsertValues += ',null';
-				    	tempInsertValues += ',null';
-				    	tempInsertValues += ',null';
-				    	queries.push(tempInsertValues);
+				    	if(store_data){
+					    	tempInsertValues += "'" + escapeForSql( tempObj.companyName ) + "'";
+					    	if(tempObj.address == '' || tempObj.address == null)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ",'" + escapeForSql( tempObj.address ) + "'";
+					    	}
+					    	if(tempObj.about == '' || tempObj.about == null)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ",'" + escapeForSql( tempObj.about ) + "'";
+					    	}
+					    	if(tempObj.image == '' || tempObj.image == null)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ",'" + escapeForSql( tempObj.image ) + "'";
+					    	}
+					    	if(tempObj.keywords.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.keywords.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
+					    	if(tempObj.categories.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.categories.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
+					    	tempInsertValues += ',null';
+					    	tempInsertValues += ',null';
+					    	tempInsertValues += ',null';
+					    	tempInsertValues += ',null';
+					    	tempInsertValues += ',null';
+					    	tempInsertValues += ',null';
+					    	queries.push(tempInsertValues);
+					    }
 			    	}
 			    	results.push(tempObj);
 			    }
@@ -304,16 +314,18 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging) {
 			    	// console.log('processes finished');
 			    	// console.log('queries ', queries);
 			    	console.log('sequential operation ', (new Date() - date) + 'ms'); // operation: 1753.916ms
-			    	// Promise.all((()=>{
-			    	// 	let tempArray = [];
-			    	// 	let numIterations = Math.ceil(queries.length / 20);
-			    	// 	for(let i = 0; i < numIterations; i++)
-			    	// 	{
-			    	// 		tempArray.push(insertIntoDB(queries.slice((20*i), 20*(i+1))));
-			    	// 	}
-			    	// 	return tempArray;
-			    	// })()).catch((error)=>console.log('insertion error ',error));
-			    	insertIntoDB(queries).catch((error)=>console.log('insertion error ',error));
+			    	if(store_data){
+			    		// Promise.all((()=>{
+				    	// 	let tempArray = [];
+				    	// 	let numIterations = Math.ceil(queries.length / 20);
+				    	// 	for(let i = 0; i < numIterations; i++)
+				    	// 	{
+				    	// 		tempArray.push(insertIntoDB(queries.slice((20*i), 20*(i+1))));
+				    	// 	}
+				    	// 	return tempArray;
+				    	// })()).catch((error)=>console.log('insertion error ',error));
+				    	insertIntoDB(queries).catch((error)=>console.log('insertion error ',error));
+			    	}
 			    	resolve({results,time: (new Date() - date) + 'ms'});
 			    }
 			  });
@@ -324,7 +336,7 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging) {
 
 app.post('/', (req, res)=>{
 	let data = req.body;
-	scrape(true, data.category, data.numberPages, data.allow_deep_digging)
+	scrape(true, data.category, data.numberPages, data.allow_deep_digging, data.store_data)
 	.then((result)=>{
 		res.setHeader('Content-Type', 'application/json');
 		res.send(JSON.stringify(result, null, 2)); //write a response to the client
@@ -332,14 +344,14 @@ app.post('/', (req, res)=>{
 });
 
 app.get('/p', (req, res)=>{
-	scrape(true, 'fast food', 134, true)
+	scrape(true, 'fast food', 5, false, true)
 	.then((result)=>{
 		res.setHeader('Content-Type', 'application/json');
 		res.send(JSON.stringify(result, null, 2)); //write a response to the client
 	});
 })
 app.get('/s', (req, res)=>{
-	scrape(false, 'fast food', 1, true)
+	scrape(false, 'fast food', 5, false, true)
 	.then((result)=>{
 		res.setHeader('Content-Type', 'application/json');
 		res.send(JSON.stringify(result, null, 2)); //write a response to the client
