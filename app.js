@@ -16,9 +16,11 @@ let workerFarm = require('worker-farm')
   , autoStart                   : false
 }, require.resolve('./child'));
 
+//connecting to postgredb
 const client = new Client(config.postgre)
 client.connect()
 
+//to make a bulk insert from given array of queries
 let insertIntoDB = function(queriesArr) {
 	return new Promise((resolve, reject)=>{
 		let querystring = "insert into shop(companyName,address,about,image,keywords,categories,facebook,ratingTotal,photos,menus,branches,reviews) values";
@@ -38,6 +40,8 @@ let insertIntoDB = function(queriesArr) {
 	});
 }
 
+//to escape ' and " with ^ from any given string 
+//this is required for the database insertions to work properly
 let escapeForSql = function($item){
 	return $item.replace(/['"]/g,()=>'^');
 }
@@ -49,13 +53,24 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 //create a scrape function: 
+//the parallel flag determines if we will operate on the main thread or on multiple child threads
+//categoryName the input given from the Api
+//numPages is given from the api to determine the number of iterations
+//allow_deep_digging flag when set to true, it allows the childs to go more deeply into the website 
+//and fetch "more information" like facebook, photos, menus, reviews, rate, etc
+//store_data a flag to let the driver store the data after sending back the response  
 let scrape = function(parallel, categoryName, numPages, allow_deep_digging, store_data) {
 	return new Promise((resolve, reject)=>{
+		//to count the whole time spend
 		let date = new Date();
+		//to determine how many workers has finished to terminate the process
 		let ret = 0;
+		//this is the array given back to the api as results
 		let results = [];
+		//this is the array that would be given to the insertIntoDB function
 		let queries = [];
 		if(parallel){
+			//parallel
 			for (let i = 1; i <= numPages; i++) {
 			  //generating tasks
 			  workers(categoryName, i, allow_deep_digging, function (err, out) {
@@ -172,10 +187,10 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging, stor
 			    	results.push(tempObj);
 			    }
 			    if(++ret == numPages){
-			    	// this is called after all tasks are finished
+			    	//this is called after all tasks are finished
 			    	// console.log('processes finished');
 			    	// console.log('queries ', queries);
-			    	console.log('parallel operation ', (new Date() - date) + 'ms'); // operation: 17numPages3.916ms
+			    	console.log('parallel operation ', (new Date() - date) + 'ms'); // operation: <No>ms
 			    	if(store_data){
 			    		// Promise.all((()=>{
 				    	// 	let tempArray = [];
@@ -336,29 +351,17 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging, stor
 
 app.post('/', (req, res)=>{
 	let data = req.body;
+	// the function to start the crawling process
 	scrape(true, data.category, data.numberPages, data.allow_deep_digging, data.store_data)
 	.then((result)=>{
+		//write a response to the client
 		res.setHeader('Content-Type', 'application/json');
-		res.send(JSON.stringify(result, null, 2)); //write a response to the client
+		res.send(JSON.stringify(result, null, 2)); 
 	});
 });
 
-app.get('/p', (req, res)=>{
-	scrape(true, 'fast food', 5, false, true)
-	.then((result)=>{
-		res.setHeader('Content-Type', 'application/json');
-		res.send(JSON.stringify(result, null, 2)); //write a response to the client
-	});
-})
-app.get('/s', (req, res)=>{
-	scrape(false, 'fast food', 5, false, true)
-	.then((result)=>{
-		res.setHeader('Content-Type', 'application/json');
-		res.send(JSON.stringify(result, null, 2)); //write a response to the client
-	});
-})
 
-
+//let the server listen on the given port
 app.listen((process.env.PORT || 8080), ()=>{
 	console.log("server is running on port " +(process.env.PORT || 8080));
 }); //the server object listens on port 8080

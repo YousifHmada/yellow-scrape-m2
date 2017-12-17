@@ -1,13 +1,20 @@
 const cheerio = require('cheerio');
 let axios = require('axios');
+//categoryName the input given from the Api
+//inp is the index of page to be fetched
+//allow_deep_digging flag when set to true, it allows the childs to go more deeply into the website 
 module.exports = function (categoryName, inp, allow_deep_digging, callback) {
   let date = new Date();
+  //this would be used by cherrio
   let $  = '';
+  //the array containg the results to be returned
   let results = [];
   // console.log('req: ' + inp + ' , ' + process.pid);
+  //making the request to the specific page
   axios.get('https://www.yellowpages.com.eg/en/category/' + categoryName + '/p' + inp)
   	.then((response)=>{
   		// console.log(response.data);
+      //reading the html response and building up the cheerio obj
   		$ = cheerio.load(response.data, {
           withDomLvl1: true,
           normalizeWhitespace: false,
@@ -69,8 +76,11 @@ module.exports = function (categoryName, inp, allow_deep_digging, callback) {
       }
   	}).then(()=>{
       // console.log('response: ' + inp + ' , ' + process.pid + ' ,time: ' + (new Date() - date) + 'ms');
-      if(!allow_deep_digging);
+      //checking the allow_deep_digging flag 
+      if(!allow_deep_digging); //resolving to return the previous results array
       else{
+        //go more deep into the search by making another request for each shop that has more_information link
+        //promise all would wait for all requests to be resolved and modigying the results array the resolved
         return Promise.all(results.map((obj)=>{
           if(obj.additionalInfo != ''){
             return axios.get(obj.additionalInfo).then((response)=>{
@@ -144,6 +154,6 @@ module.exports = function (categoryName, inp, allow_deep_digging, callback) {
         }));
       }
     }).then(()=>{
-      callback(null, results);
+      callback(null, results); //call back with the result array
     });
 }
