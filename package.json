@@ -16,6 +16,8 @@
     "body-parser": "^1.18.2",
     "cheerio": "^1.0.0-rc.2",
     "express": "^4.16.2",
+    "pg": "^7.4.0",
+    "sqlstring": "^2.3.0",
     "worker-farm": "^1.5.2"
   }
 }
