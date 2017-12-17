@@ -27,7 +27,7 @@ let insertIntoDB = function(queriesArr) {
 			querystring += flag ? ",(" + $query + ")" : "(" + $query + ")";
 			if(!flag)flag = true;
 		});
-		// console.log(querystring);
+		// console.log('statement', querystring);
 		client.query(querystring, (err, response) => {
 				if(err != null){
 					reject(err);
@@ -172,6 +172,15 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging) {
 			    	// console.log('processes finished');
 			    	// console.log('queries ', queries);
 			    	console.log('parallel operation ', (new Date() - date) + 'ms'); // operation: 17numPages3.916ms
+			    	// Promise.all((()=>{
+			    	// 	let tempArray = [];
+			    	// 	let numIterations = Math.ceil(queries.length / 20);
+			    	// 	for(let i = 0; i < numIterations; i++)
+			    	// 	{
+			    	// 		tempArray.push(insertIntoDB(queries.slice((20*i), 20*(i+1))));
+			    	// 	}
+			    	// 	return tempArray;
+			    	// })()).catch((error)=>console.log('insertion error ',error));
 			    	insertIntoDB(queries).catch((error)=>console.log('insertion error ',error));
 			    	resolve({results,time: (new Date() - date) + 'ms'});
 			    }
@@ -295,6 +304,15 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging) {
 			    	// console.log('processes finished');
 			    	// console.log('queries ', queries);
 			    	console.log('sequential operation ', (new Date() - date) + 'ms'); // operation: 1753.916ms
+			    	// Promise.all((()=>{
+			    	// 	let tempArray = [];
+			    	// 	let numIterations = Math.ceil(queries.length / 20);
+			    	// 	for(let i = 0; i < numIterations; i++)
+			    	// 	{
+			    	// 		tempArray.push(insertIntoDB(queries.slice((20*i), 20*(i+1))));
+			    	// 	}
+			    	// 	return tempArray;
+			    	// })()).catch((error)=>console.log('insertion error ',error));
 			    	insertIntoDB(queries).catch((error)=>console.log('insertion error ',error));
 			    	resolve({results,time: (new Date() - date) + 'ms'});
 			    }
@@ -314,7 +332,7 @@ app.post('/', (req, res)=>{
 });
 
 app.get('/p', (req, res)=>{
-	scrape(true, 'fast food', 1, true)
+	scrape(true, 'fast food', 134, true)
 	.then((result)=>{
 		res.setHeader('Content-Type', 'application/json');
 		res.send(JSON.stringify(result, null, 2)); //write a response to the client
