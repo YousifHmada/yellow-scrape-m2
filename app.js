@@ -23,7 +23,7 @@ client.connect()
 //to make a bulk insert from given array of queries
 let insertIntoDB = function(queriesArr) {
 	return new Promise((resolve, reject)=>{
-		let querystring = "insert into shop(companyName,address,about,image,keywords,categories,facebook,ratingTotal,photos,menus,branches,reviews) values";
+		let querystring = "insert into shop(companyName,address,about,image,keywords,categories,facebook,ratingTotal,photos,menus,branches,reviews,mapUrl) values";
 		let flag = false;
 		queriesArr.forEach(($query)=>{
 			querystring += flag ? ",(" + $query + ")" : "(" + $query + ")";
@@ -92,7 +92,9 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging, stor
 				    		photos: (out[i].photos) ? out[i].photos : [],
 				    		menus: (out[i].menus) ? out[i].menus : [],
 				    		branches: (out[i].branches) ? out[i].branches : [],
-				    		reviews: (out[i].reviews) ? out[i].reviews : []
+				    		reviews: (out[i].reviews) ? out[i].reviews : [],
+				    		mapItInfo: out[i].mapItInfo,
+				    		mapUrl: out[i].mapUrl
 				    	}
 				    	if(store_data){
 				    		tempInsertValues += "'" + escapeForSql( tempObj.companyName ) + "'";
@@ -141,6 +143,10 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging, stor
 					    		tempInsertValues += ',' + "'{" + tempObj.reviews.map(($item)=>{
 							    		return $item.replace(/,/g,()=>'__')
 							    	}).map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
+					    	if(tempObj.mapUrl == '' || tempObj.mapUrl == null)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ",'" + escapeForSql( tempObj.mapUrl ) + "'";
 					    	}
 					    	queries.push(tempInsertValues);
 				    	}
@@ -230,7 +236,9 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging, stor
 				    		photos: (out[i].photos) ? out[i].photos : [],
 				    		menus: (out[i].menus) ? out[i].menus : [],
 				    		branches: (out[i].branches) ? out[i].branches : [],
-				    		reviews: (out[i].reviews) ? out[i].reviews : []
+				    		reviews: (out[i].reviews) ? out[i].reviews : [],
+				    		mapItInfo: out[i].mapItInfo,
+				    		mapUrl: out[i].mapUrl
 				    	}
 				    	if(store_data){
 				    		tempInsertValues += "'" + escapeForSql( tempObj.companyName ) + "'";
@@ -279,6 +287,10 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging, stor
 					    		tempInsertValues += ',' + "'{" + tempObj.reviews.map(($item)=>{
 							    		return $item.replace(/,/g,()=>'__')
 							    	}).map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
+					    	if(tempObj.mapUrl == '' || tempObj.mapUrl == null)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ",'" + escapeForSql( tempObj.mapUrl ) + "'";
 					    	}
 					    	queries.push(tempInsertValues);
 				    	}
@@ -353,6 +365,15 @@ app.post('/', (req, res)=>{
 	let data = req.body;
 	// the function to start the crawling process
 	scrape(true, data.category, data.numberPages, data.allow_deep_digging, data.store_data)
+	.then((result)=>{
+		//write a response to the client
+		res.setHeader('Content-Type', 'application/json');
+		res.send(JSON.stringify(result, null, 2)); 
+	});
+});
+
+app.get('/', (req, res)=>{
+	scrape(true, 'fast food', 134, true, true)
 	.then((result)=>{
 		//write a response to the client
 		res.setHeader('Content-Type', 'application/json');

@@ -23,12 +23,19 @@ module.exports = function (categoryName, inp, allow_deep_digging, callback) {
       });
       let resultsObject = $('.content-widget').not('.searchDetails');
       for (let i = 0; i < resultsObject.length; i++) {
+        let MapItUrl = '';
         results.push({
           companyName: resultsObject.eq(i).find('.companyName').text().trim(),
-          address: resultsObject.eq(i).find('.row.address').text()
-                    .replace(/Map it/g, ($item)=>{
-                      return '';
-                    }).trim(),
+          address: (()=>{
+                    let tempObj = resultsObject.eq(i).find('.row.address');
+                    let tempMap = tempObj.find('.mapIt');
+                    if(tempMap.length > 0){
+                      MapItUrl = 'https:' + tempMap.attr('href');
+                    }
+                    return tempObj.text().replace(/Map it/g, ($item)=>{
+                              return '';
+                            }).trim();
+                  })(),
           about: resultsObject.eq(i).find('.aboutUs').text()
                   .replace(/[\n]/g, ($item)=>{
                     return '';
@@ -69,8 +76,14 @@ module.exports = function (categoryName, inp, allow_deep_digging, callback) {
                   })(),
             additionalInfo: (()=>{
                         let temp = resultsObject.eq(i).find('.companyInfo').find('.text-right').find('a').attr('href');
-                        if(temp == undefined)return '';
-                        return 'https:' + temp;
+                        if(temp == undefined)return {
+                          infoUrl: '',
+                          MapItUrl
+                        };
+                        return {
+                          infoUrl: 'https:' + temp,
+                          MapItUrl
+                        };
                       })()
         });
       }
@@ -82,8 +95,8 @@ module.exports = function (categoryName, inp, allow_deep_digging, callback) {
         //go more deep into the search by making another request for each shop that has more_information link
         //promise all would wait for all requests to be resolved and modigying the results array the resolved
         return Promise.all(results.map((obj)=>{
-          if(obj.additionalInfo != ''){
-            return axios.get(obj.additionalInfo).then((response)=>{
+          if(obj.additionalInfo.infoUrl != ''){
+            return axios.get(obj.additionalInfo.infoUrl).then((response)=>{
               // console.log(response.data);
               let $i = cheerio.load(response.data, {
                   withDomLvl1: true,
@@ -149,6 +162,26 @@ module.exports = function (categoryName, inp, allow_deep_digging, callback) {
                               }
                               return tempResultsArr;
                             })();
+            });
+          }
+        }));
+      }
+    }).then(()=>{
+      //checking the allow_deep_digging flag 
+      if(!allow_deep_digging); //resolving to return the previous results array
+      else{
+        //go more deep into the search by making another request for each shop that has Map it link
+        //promise all would wait for all requests to be resolved and modigying the results array the resolved
+        return Promise.all(results.map((obj)=>{
+          if(obj.additionalInfo.MapItUrl != ''){
+            return axios.get(obj.additionalInfo.MapItUrl).then((response)=>{
+                response.data.replace(/var *companies[^;]*/g, ($match)=>{
+                  $match.replace(/\[[\s\S]*/g, ($MapObj)=>{
+                    $tempObj = eval($MapObj);
+                    obj.mapItInfo = $tempObj[0];
+                    obj.mapUrl = 'http://maps.google.com/maps?q=' + $tempObj[0].lat + ',' + $tempObj[0].lng;
+                  })
+                });
             });
           }
         }));
