@@ -23,7 +23,7 @@ client.connect()
 //to make a bulk insert from given array of queries
 let insertIntoDB = function(queriesArr) {
 	return new Promise((resolve, reject)=>{
-		let querystring = "insert into shop(companyName,address,about,image,keywords,categories,facebook,ratingTotal,photos,menus,branches,reviews,mapUrl) values";
+		let querystring = "insert into shop(companyName,address,about,image,phones,keywords,categories,facebook,ratingTotal,photos,menus,branches,reviews,mapUrl) values";
 		let flag = false;
 		queriesArr.forEach(($query)=>{
 			querystring += flag ? ",(" + $query + ")" : "(" + $query + ")";
@@ -85,6 +85,7 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging, stor
 				    		address: out[i].address,
 				    		about: out[i].about,
 				    		image: out[i].image,
+				    		phones: out[i].phones,
 				    		keywords: out[i].keywords,
 				    		categories: out[i].categories,
 				    		facebook: (out[i].facebook) ? out[i].facebook : '',
@@ -109,6 +110,10 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging, stor
 					    	if(tempObj.image == '' || tempObj.image == null)tempInsertValues += ',null';
 					    	else{
 					    		tempInsertValues += ",'" + escapeForSql( tempObj.image ) + "'";
+					    	}
+					    	if(tempObj.phones.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.phones.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
 					    	}
 					    	if(tempObj.keywords.length <= 0)tempInsertValues += ',null';
 					    	else{
@@ -156,6 +161,7 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging, stor
 				    		address: out[i].address,
 				    		about: out[i].about,
 				    		image: out[i].image,
+				    		phones: out[i].phones,
 				    		keywords: out[i].keywords,
 				    		categories: out[i].categories
 				    	};
@@ -173,6 +179,10 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging, stor
 					    	else{
 					    		tempInsertValues += ",'" + escapeForSql( tempObj.image ) + "'";
 					    	}
+					    	if(tempObj.phones.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.phones.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
 					    	if(tempObj.keywords.length <= 0)tempInsertValues += ',null';
 					    	else{
 					    		tempInsertValues += ',' + "'{" + tempObj.keywords.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
@@ -181,6 +191,7 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging, stor
 					    	else{
 					    		tempInsertValues += ',' + "'{" + tempObj.categories.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
 					    	}
+					    	tempInsertValues += ',null';
 					    	tempInsertValues += ',null';
 					    	tempInsertValues += ',null';
 					    	tempInsertValues += ',null';
@@ -229,6 +240,7 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging, stor
 				    		address: out[i].address,
 				    		about: out[i].about,
 				    		image: out[i].image,
+				    		phones: out[i].phones,
 				    		keywords: out[i].keywords,
 				    		categories: out[i].categories,
 				    		facebook: (out[i].facebook) ? out[i].facebook : '',
@@ -253,6 +265,10 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging, stor
 					    	if(tempObj.image == '' || tempObj.image == null)tempInsertValues += ',null';
 					    	else{
 					    		tempInsertValues += ",'" + escapeForSql( tempObj.image ) + "'";
+					    	}
+					    	if(tempObj.phones.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.phones.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
 					    	}
 					    	if(tempObj.keywords.length <= 0)tempInsertValues += ',null';
 					    	else{
@@ -300,6 +316,7 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging, stor
 				    		address: out[i].address,
 				    		about: out[i].about,
 				    		image: out[i].image,
+				    		phones: out[i].phones,
 				    		keywords: out[i].keywords,
 				    		categories: out[i].categories
 				    	};
@@ -317,6 +334,10 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging, stor
 					    	else{
 					    		tempInsertValues += ",'" + escapeForSql( tempObj.image ) + "'";
 					    	}
+					    	if(tempObj.phones.length <= 0)tempInsertValues += ',null';
+					    	else{
+					    		tempInsertValues += ',' + "'{" + tempObj.phones.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
+					    	}
 					    	if(tempObj.keywords.length <= 0)tempInsertValues += ',null';
 					    	else{
 					    		tempInsertValues += ',' + "'{" + tempObj.keywords.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
@@ -325,6 +346,7 @@ let scrape = function(parallel, categoryName, numPages, allow_deep_digging, stor
 					    	else{
 					    		tempInsertValues += ',' + "'{" + tempObj.categories.map(($item)=>'"' + escapeForSql( $item ) + '"').join() + "}'";
 					    	}
+					    	tempInsertValues += ',null';
 					    	tempInsertValues += ',null';
 					    	tempInsertValues += ',null';
 					    	tempInsertValues += ',null';
@@ -365,6 +387,16 @@ app.post('/', (req, res)=>{
 	let data = req.body;
 	// the function to start the crawling process
 	scrape(true, data.category, data.numberPages, data.allow_deep_digging, data.store_data)
+	.then((result)=>{
+		//write a response to the client
+		res.setHeader('Content-Type', 'application/json');
+		res.send(JSON.stringify(result, null, 2)); 
+	});
+});
+
+app.get('/', (req, res)=>{
+	// the function to start the crawling process
+	scrape(true, 'fast food', 1, true, true)
 	.then((result)=>{
 		//write a response to the client
 		res.setHeader('Content-Type', 'application/json');
