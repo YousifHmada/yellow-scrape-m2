@@ -372,15 +372,6 @@ app.post('/', (req, res)=>{
 	});
 });
 
-app.get('/', (req, res)=>{
-	scrape(true, 'fast food', 134, true, true)
-	.then((result)=>{
-		//write a response to the client
-		res.setHeader('Content-Type', 'application/json');
-		res.send(JSON.stringify(result, null, 2)); 
-	});
-});
-
 
 //let the server listen on the given port
 app.listen((process.env.PORT || 8080), ()=>{
